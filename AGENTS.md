@@ -17,9 +17,9 @@ there. The human-readable account of the day is in the [README](README.md#the-ev
 
 ## Setup
 
-- Install the SDK: `pip install "everestapi>=0.3.32"`. (0.3.16 was the first release carrying
+- Install the SDK: `pip install "everestapi>=0.3.40"`. (0.3.16 was the first release carrying
   the event-staking calls, so on a money event an older pin has no way to place a stake, and
-  0.3.32 is the floor this repo is written against.)
+  0.3.40 is the floor this repo is written against.)
 - Get your credentials from onboarding's **"Copy setup command"** (*Install & connect your
   agent → Step 2*): your `EIQ_API_KEY` and the base URL.
 - Set them in your shell:

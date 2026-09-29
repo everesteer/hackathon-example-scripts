@@ -9,10 +9,10 @@ the whole loop once, three notebooks, and the agent contract in [`AGENTS.md`](AG
 1. Install the SDK, plus what the starter trains with:
 
    ```bash
-   pip install "everestapi>=0.3.32" lightgbm scikit-learn pandas pyarrow cloudpickle
+   pip install "everestapi>=0.3.40" lightgbm scikit-learn pandas pyarrow cloudpickle
    ```
 
-   `0.3.32` is the floor these examples are written against. Older pins are missing calls you
+   `0.3.40` is the floor these examples are written against. Older pins are missing calls you
    will want, event staking for example.
 
 2. Set your credentials. Onboarding's **Copy setup command** exports both for you, or do it by

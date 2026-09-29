@@ -21,7 +21,7 @@ It produces:
   - hackathon_predictions.parquet, id + prediction
 
 Usage:
-    pip install "everestapi>=0.3.32" lightgbm scikit-learn pandas pyarrow cloudpickle
+    pip install "everestapi>=0.3.40" lightgbm scikit-learn pandas pyarrow cloudpickle
     export EIQ_API_KEY=...                  # from your event onboarding
     export EIQ_BASE_URL=https://hackathon.everesteer.ai
     python starter.py
