@@ -361,8 +361,8 @@ To let an agent drive the tools directly, see [The toolkit](#the-toolkit).
 ## Links
 
 - SDK on PyPI: <https://pypi.org/project/everestapi/> · source:
-  <https://github.com/everestquant/everestapi-public>
+  <https://github.com/everesteer/everestapi-public>
 - Agent contract and full loop: [`AGENTS.md`](AGENTS.md)
 - Research skills for Claude Code and friends: [`.claude/skills/`](.claude/skills)
 - Tournament starter kit (**a different product, not your key**; private until go-live,
-  accessible to collaborators): <https://github.com/everestquant/example-scripts>
+  accessible to collaborators): <https://github.com/everesteer/example-scripts>
