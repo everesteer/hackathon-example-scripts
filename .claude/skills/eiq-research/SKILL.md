@@ -20,7 +20,7 @@ you through the four sibling skills in the right order and holds the connective 
 defaults, gates, and handoffs, so a loose "try this idea" request lands as a submitted,
 documented model.
 
-You only have the **participant surface**: the `everestapi` SDK (`pip install "everestapi>=0.3.32"`),
+You only have the **participant surface**: the `everestapi` SDK (`pip install "everestapi>=0.3.40"`),
 the Everesteer MCP server (`python -m everestapi.mcp`, tools named `eiq_*`, the
 `mcp__<server>__` prefix depends on how your client registered the server), datasets
 you download, and the helpers shipped in this repo. There is no internal platform source

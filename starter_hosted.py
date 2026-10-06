@@ -25,7 +25,7 @@ This produces:
   - hosted_predictions.parquet:    predictions file (id + prediction)
 
 Usage:
-    pip install "everestapi>=0.3.32" lightgbm pandas pyarrow cloudpickle
+    pip install "everestapi>=0.3.40" lightgbm pandas pyarrow cloudpickle
     export EIQ_API_KEY=...                 # from onboarding
     export EIQ_BASE_URL=https://hackathon.everesteer.ai
     python starter_hosted.py
