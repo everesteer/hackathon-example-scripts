@@ -24,8 +24,12 @@ PY="$(command -v python3 || command -v python || true)"
 
 # 2. SDK + MCP extra (no-op if already importable).
 if ! "$PY" -c "import everestapi.mcp" >/dev/null 2>&1; then
-  say "Installing everestapi[mcp]…"
-  "$PY" -m pip install --quiet "everestapi[mcp]>=0.3.40"
+  say "Installing everesteer-api[mcp]…"
+  # The SDK was published as `everestapi` up to 0.3.41, and both packages write the
+  # same files. Remove both first: removing only the old one deletes files the new
+  # one owns, and pip then still counts the new one as installed and skips it.
+  "$PY" -m pip uninstall --quiet -y everestapi everesteer-api >/dev/null 2>&1 || true
+  "$PY" -m pip install --quiet "everesteer-api[mcp]>=0.4.1"
 fi
 
 # 3. Credentials: take from env, prompt for missing (secrets never echoed).

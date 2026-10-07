@@ -9,11 +9,13 @@ the whole loop once, three notebooks, and the agent contract in [`AGENTS.md`](AG
 1. Install the SDK, plus what the starter trains with:
 
    ```bash
-   pip install "everestapi>=0.3.40" lightgbm scikit-learn pandas pyarrow cloudpickle
+   pip install "everesteer-api>=0.4.1" lightgbm scikit-learn pandas pyarrow cloudpickle
    ```
 
-   `0.3.40` is the floor these examples are written against. Older pins are missing calls you
-   will want, event staking for example.
+   The SDK is published as `everesteer-api` (it was `everestapi` up to 0.3.41); you still
+   `import everestapi`. If the old `everestapi` package is installed, first run
+   `pip uninstall -y everestapi everesteer-api`: both packages write the same files, so
+   removing only the old one would break the new one.
 
 2. Set your credentials. Onboarding's **Copy setup command** exports both for you, or do it by
    hand:
@@ -56,7 +58,7 @@ reachable three ways. For example:
 
 | | How you call it |
 |---|---|
-| **Python SDK** | `client.get_started()` — the `everestapi` package from the quickstart |
+| **Python SDK** | `client.get_started()` — the `everesteer-api` package from the quickstart |
 | **MCP tool** | `eiq_get_started` — your agent calls it directly |
 | **HTTP** | `GET /api/v1/get_started` with your `X-API-Key` |
 
@@ -360,7 +362,7 @@ To let an agent drive the tools directly, see [The toolkit](#the-toolkit).
 
 ## Links
 
-- SDK on PyPI: <https://pypi.org/project/everestapi/> · source:
+- SDK on PyPI: <https://pypi.org/project/everesteer-api/> · source:
   <https://github.com/everesteer/everestapi-public>
 - Agent contract and full loop: [`AGENTS.md`](AGENTS.md)
 - Research skills for Claude Code and friends: [`.claude/skills/`](.claude/skills)
