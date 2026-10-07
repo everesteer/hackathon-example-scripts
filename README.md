@@ -318,9 +318,10 @@ it closes, and a lock is immutable. Poll `draft_window` rather than guessing fro
 **You draft blind.** Round N's score stays sealed until N+1 opens, which is also when N's stakes
 settle — so you size the next round the moment you learn how the last one went.
 
-**The return is bounded**, not proportional to the score: `A * tanh(payout_factor * score / A)`,
-with `A` the `stake_return_amplitude` from `get_event_staking`. Size with
-`everestapi.scoring.payout`, not a proportional guess.
+**The return is bounded**, not proportional to the blend: a round pays `stake * round score`,
+and the round score is `b * arctan(blend / b)` with `b` the `score_multiple_constant` in
+`explain_scoring`'s `weights`. Size with `everestapi.scoring.payout(..., score_multiple_constant=b)`,
+not a proportional guess.
 
 `amount_usdc` is a **string**; a JSON number is refused. Full surface in
 [`AGENTS.md`](AGENTS.md#event-staking).

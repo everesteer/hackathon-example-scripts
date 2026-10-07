@@ -210,10 +210,10 @@ non-overfit CORR). Then invoke
 - **The round score is a weighted blend of CORR, AIMC and NCORR, bounded per round. Call
   `explain_scoring` for the live weights.** Don't hardcode an ordering; it has changed
   before. Uniqueness pays more than raw accuracy, so keep the search pointed at
-  differentiated alpha rather than at chasing CORR. On a money event the score is then
-  mapped to a payout through a bounded function, `A * tanh(payout_factor * score / A)`;
-  read `payout_factor` and `stake_return_amplitude` from `get_event_staking` and pass them
-  to `everestapi.scoring.payout` rather than estimating proportionally.
+  differentiated alpha rather than at chasing CORR. On a money event a round pays
+  `stake * round score`, and the round score is `b * arctan(blend / b)` (`b` is
+  `score_multiple_constant` in `explain_scoring`'s `weights`); size with
+  `everestapi.scoring.payout(..., score_multiple_constant=b)` rather than proportionally.
 - **Scout before you scale.** Always a downsampled-exped round first; full data only for
   survivors.
 - **Iterate in rounds and stop at a plateau.** ~4-5 configs per round; two flat rounds

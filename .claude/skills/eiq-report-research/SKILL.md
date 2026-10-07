@@ -25,9 +25,9 @@ internal platform repo to call into.
 - Round score: a weighted blend of CORR, AIMC and NCORR, bounded per round. Call
   `explain_scoring` for the live weights; don't hardcode which term dominates, it has
   changed before. Uniqueness pays more than raw accuracy, say so in the write-up. On a
-  money event the score is then mapped to a payout through a **bounded** function,
-  `A * tanh(payout_factor * score / A)`; `get_event_staking` reports the `payout_factor`
-  and `stake_return_amplitude` each round froze, and `everestapi.scoring.payout` takes both.
+  money event a round pays `stake * round score`, and the round score is
+  `b * arctan(blend / b)` (`b` is `score_multiple_constant` in `explain_scoring`'s
+  `weights`), so one round moves at most `b * pi / 2` of the stake.
   Cumulative standings carry the **exped-weighted mean** of per-round scores, never a sum.
 - Always report these:
   - **CORR**: mean per-exped rank correlation of your predictions vs the target; also a
@@ -141,9 +141,9 @@ One short subsection per config that *actually ran*. Name the artifacts
 |-------|-------|-------------|----------------|-------------------|------------------|------------------|--------|--------------|--------|
 | ...   | ...   | ...         | ...            | ...               | ...              | ...              | ...    | ...          | best / kept / dropped |
 
-`payout (est)` is the weighted CORR+AIMC+NCORR blend, before the payout factor and (on
-staked events) the per-round return bound. `explain_scoring` reads the weights and the
-bound live, so don't hardcode an ordering. Call out any high-CORR / high-corr_w/_benchmark
+`payout (est)` is `b * arctan(blend / b)` on the weighted CORR+AIMC+NCORR blend, per unit of
+stake. `explain_scoring` reads the weights and `b` (`weights.score_multiple_constant`) live, so
+don't hardcode an ordering. Call out any high-CORR / high-corr_w/_benchmark
 rows explicitly. Accuracy that differentiates nothing scores well offline and still pays
 badly once AIMC resolves.
 
