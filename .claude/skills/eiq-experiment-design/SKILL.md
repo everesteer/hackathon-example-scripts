@@ -5,7 +5,7 @@ description: >-
   research loop. Clarify the idea, align a baseline against the event's published
   benchmark, write configs, train via the Everesteer MCP server (the unified train tool,
   templated or custom), select experiments on an offline estimate of the round score
-  (the live weights applied to CORR and the AIMC proxy), iterate in rounds, stop at a
+  (the live weights applied to FIT and the UNQ proxy), iterate in rounds, stop at a
   plateau, and scale the winner. Use when asked to design an event experiment, decide what to try next, or
   turn a model idea into a structured, multi-round research plan.
 ---
@@ -61,10 +61,14 @@ tournament reads that research write-ups reach for do not work here, and two of 
   other reason your holdout is carved out of `train`.
 - **Metrics** (call `explain_scoring` for the live weights and definitions; it is the
   authority, this file is not):
-  - **CORR**: per-exped rank correlation of your predictions vs the graded target. A
+  All three are covariances with the mean-centred target, computed per exped on your
+  **rank-gaussianized** predictions (ranked, then mapped to a standard normal), so none is
+  bounded by 1.
+  - **FIT**: per-exped rank covariance of your predictions with the graded target. A
     scored term, and the one you can measure most precisely offline. One input to your
     selection score, not the whole of it (see the checklist below).
-  - **AIMC**: your contribution measured against a **reference series**. On a hackathon
+  - **UNQ**: the same covariance after the direction of a **reference series** is removed
+    from your predictions. On a hackathon
     event `explain_scoring` reports that series as **the event's own benchmark
     predictions**, not the crowd consensus the live tournament uses. That is a real
     advantage: the benchmark is downloadable over `train`, so you can build a close
@@ -73,21 +77,18 @@ tournament reads that research write-ups reach for do not work here, and two of 
     as a `contribution()` helper you can lift. It is still a proxy, confirmed server-side
     after you submit, but it is not the unobservable quantity a tournament write-up would
     tell you it is.
-  - **NCORR**: correlation after neutralizing against a **frozen core feature set**. The
-    schema's `core_feature_overlap` tells you how many of those core features fall inside
-    each published feature set; the membership is deliberately not published. A high
+  - **INOV**: UNQ's calculation with the equal-weight average of a **frozen core feature
+    set** in place of the reference series. The schema's `core_feature_overlap` tells you how
+    many of those core features fall inside each published feature set; the membership is
+    deliberately not published, so you cannot reproduce INOV exactly offline. A high
     overlap is not an escape route: it means the core features already sit inside the ones
-    you trained on. Two things before you try to reproduce the number offline. It runs on
-    your **rank-gaussianized** predictions, not your raw ones, and the platform neutralizes
-    with a spectrally-anchored ridge rather than exact OLS (today's core set is
-    rank-deficient, which keeps the ridge branch active), so an exact residualization will
-    not match it. NCORR is **null** when none of the core features are present on the
+    you trained on. INOV is **null** when none of the core features are present on the
     scored frame, and a null term means no round score at all: those entries rank below
     every scored one.
-  - Always sanity-check **correlation-with-benchmark**: a config with high CORR but
+  - Always sanity-check **correlation-with-benchmark**: a config with high FIT but
     correlation-with-benchmark near 1.0 is re-expressing the benchmark and will earn
-    little AIMC.
-- **The round score is a weighted blend of CORR, AIMC and NCORR, bounded per round. Call
+    little UNQ.
+- **The round score is a weighted blend of FIT, UNQ and INOV, bounded per round. Call
   `explain_scoring` for the live weights.** Don't hardcode which term dominates; it has
   changed before. On a money event that score is then mapped to a payout through a
   **bounded** function, `A * tanh(payout_factor * score / A)`; `get_event_staking` reports
@@ -119,7 +120,7 @@ Document the chosen interpretation and the rejected ones. That reasoning is part
 
 ## Step 1: Planning checklist (answer before any training)
 
-- **Idea & novelty.** One sentence: what is being tested and why it might add AIMC.
+- **Idea & novelty.** One sentence: what is being tested and why it might add UNQ.
 - **Research type.** Name which one kind of change you are testing: a new target or feature
   engineering, a new architecture, an ensemble or blend, a training procedure, or a data
   change. That decides what you may vary and what you must hold fixed; the table is under
@@ -129,9 +130,9 @@ Document the chosen interpretation and the rejected ones. That reasoning is part
   baseline row. A hackathon key cannot score `validation` locally: its target columns are
   blanked and the practice board scores it server-side.
 - **Selection metric** = the **offline round score**: read the live weights from
-  `explain_scoring` and apply them to the terms you can measure on your holdout, CORR and
-  the `contribution()` AIMC proxy. Do not select on CORR alone. The board ranks on the
-  blend, and a model that wins on one term can lose on the score. NCORR cannot be
+  `explain_scoring` and apply them to the terms you can measure on your holdout, FIT and
+  the `contribution()` UNQ proxy. Do not select on FIT alone. The board ranks on the
+  blend, and a model that wins on one term can lose on the score. INOV cannot be
   reproduced offline (see above), so guard it indirectly with the feature-concentration
   check below. **Diagnostics** = correlation-with-benchmark and per-exped stability.
 - **Budget.** Max rounds (≈4-5 expected), compute credits, wall-clock. Check
@@ -176,7 +177,7 @@ Note that "round" here means a round of *your* experiment, not one of the event'
 scoring rounds. Keep the two straight in `experiment.md`.
 
 After each round:
-1. Score every config on your own embargoed holdout: CORR, the `contribution()` AIMC
+1. Score every config on your own embargoed holdout: FIT, the `contribution()` UNQ
    proxy, the offline round score built from them, and correlation-with-benchmark. The
    holdout only counts if the fit never saw it; for a hosted job, that means the
    `train_filter` cutoff in Step 4.
@@ -262,8 +263,8 @@ Match the sweep to the question. One variable at a time, per config, within a ro
 | **Data change** | exped sampling (which expeds, how many), feature subset within the published set | model + target |
 
 **Never sweep the evaluation itself.** The embargo and the holdout are fixed once, before
-round one, and stay fixed for the whole run. Shrink the embargo and CORR goes up because the
-leak comes back, so a sweep that selects on CORR will reliably pick the leakiest setting.
+round one, and stay fixed for the whole run. Shrink the embargo and FIT goes up because the
+leak comes back, so a sweep that selects on FIT will reliably pick the leakiest setting.
 Varying the holdout window is the same trap: you end up choosing the period that flatters you.
 
 If one parameter clearly dominates the results, spend a whole round mapping its range
@@ -275,7 +276,7 @@ If one parameter clearly dominates the results, spend a whole round mapping its 
 
 A single average metric hides the things that sink a model here.
 
-- **Per-exped stability & drawdown.** Look at the spread of per-exped CORR and the worst
+- **Per-exped stability & drawdown.** Look at the spread of per-exped FIT and the worst
   run of negative expeds, not just the mean. A high-mean, high-variance config that spends
   long stretches underwater is worse than a steadier one. (Sharpe, std-dev and max
   drawdown are display-only on the board, but they are exactly the right *selection*
@@ -284,7 +285,7 @@ A single average metric hides the things that sink a model here.
   whether the edge holds in the first half of the holdout as well as the second. An edge
   that lives in one stretch of expeds is a regime artifact, not skill.
 - **Feature concentration.** A model resting almost entirely on one or two features is
-  fragile and scores poorly on NCORR, which is a scored term. Measure it as the largest
+  fragile and scores poorly on INOV, which is a scored term. Measure it as the largest
   absolute correlation between your predictions and any single feature, and fix it by
   neutralizing per exped against the heavy block at a swept proportion
   (**`eiq-model-implementation`** has both).
@@ -293,10 +294,10 @@ A single average metric hides the things that sink a model here.
   round. Keep several genuinely different models alive rather than betting on last
   round's winner.
 - **Select on the round score, not on one term of it.** Boards rank on the weighted blend,
-  so a config that gives up some CORR for a larger AIMC can be the better model. Whether it
+  so a config that gives up some FIT for a larger UNQ can be the better model. Whether it
   is depends on the live weights, so compute it from `explain_scoring` each time rather than
   assuming which term leads. Correlation-with-benchmark is a diagnostic here, never the
-  objective: it tells you why the AIMC proxy moved, not whether the model got better.
+  objective: it tells you why the UNQ proxy moved, not whether the model got better.
 
 ---
 
@@ -361,7 +362,7 @@ for cfg in round_1_configs:              # ~4 configs, each varies ONE thing
           train_filter={"exped": {"cutoff_lt": FIRST_EMBARGO_EXPED},
                         "sample": {"fraction": 0.25, "unit": "exped"}})  -> job_id
 poll get_job_status(job_id) until all done
-# score each config on YOUR embargoed holdout: CORR, contribution(), the offline round
+# score each config on YOUR embargoed holdout: FIT, contribution(), the offline round
 # score from the live weights, corr-with-benchmark as a diagnostic
 # write results/r1.csv + experiment.md table; pick the best score; decide round 2
 ```

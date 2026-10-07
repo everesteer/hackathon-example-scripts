@@ -1,6 +1,6 @@
 ---
 name: eiq-report-research
-description: Turn a finished Everesteer hackathon-event experiment run into a durable, scientific write-up in experiment.md (abstract, motivation, method, results table, decisions, stopping rationale, findings, next steps) and generate/link the standard cumulative-CORR plot. Use after running Everesteer event experiments, or when asked to "write up the results", "produce a full report", "update experiment.md", or "generate the standard plot".
+description: Turn a finished Everesteer hackathon-event experiment run into a durable, scientific write-up in experiment.md (abstract, motivation, method, results table, decisions, stopping rationale, findings, next steps) and generate/link the standard cumulative-FIT plot. Use after running Everesteer event experiments, or when asked to "write up the results", "produce a full report", "update experiment.md", or "generate the standard plot".
 ---
 
 # Everesteer Report Research
@@ -22,7 +22,7 @@ internal platform repo to call into.
 - Primary target: the column `get_dataset_schema` reports as `primary_target`. Benchmark:
   whatever `download_benchmark("futures", "train")` serves, named by the column you find
   in that frame rather than assumed.
-- Round score: a weighted blend of CORR, AIMC and NCORR, bounded per round. Call
+- Round score: a weighted blend of FIT, UNQ and INOV, bounded per round. Call
   `explain_scoring` for the live weights; don't hardcode which term dominates, it has
   changed before. Uniqueness pays more than raw accuracy, say so in the write-up. On a
   money event the score is then mapped to a payout through a **bounded** function,
@@ -30,28 +30,29 @@ internal platform repo to call into.
   and `stake_return_amplitude` each round froze, and `everestapi.scoring.payout` takes both.
   Cumulative standings carry the **exped-weighted mean** of per-round scores, never a sum.
 - Always report these:
-  - **CORR**: mean per-exped rank correlation of your predictions vs the target; also a
-    scored term (see `explain_scoring` for the live weights). This is the primary
-    *experiment-selection* metric, since it's the one number you can compute precisely
-    offline every round. Report it **two ways**: full-period CORR and a recent-window
-    CORR (most recent ~20-40 expeds).
-  - **AIMC**: your contribution over a reference series. On a hackathon event
+  - **FIT**: mean per-exped rank covariance of your predictions with the target (ranked,
+    mapped to a standard normal, then the covariance with the mean-centred target, so it is
+    not bounded by 1); also a scored term (see `explain_scoring` for the live weights). This
+    is the primary *experiment-selection* metric, since it's the one number you can compute
+    precisely offline every round. Report it **two ways**: full-period FIT and a
+    recent-window FIT (most recent ~20-40 expeds).
+  - **UNQ**: the same covariance after a reference series' direction is removed from your
+    predictions. On a hackathon event
     `explain_scoring` reports that reference as **the event's own benchmark predictions**,
     not a crowd consensus, and the benchmark is downloadable over `train`. So unlike the
     tournament case you can report a genuine offline proxy: residualize predictions
     against the benchmark per exped, correlate the residual with the target (the
     `contribution()` helper in **`eiq-model-implementation`**). Label
     it as the proxy it is, and report the server's number where rounds have resolved.
-  - **NCORR**: correlation after neutralizing against a frozen core feature set whose
-    membership is not published. Report it where rounds have resolved; note that the
-    platform runs it on **rank-gaussianized** predictions and neutralizes with a
-    spectrally-anchored ridge, so a local OLS residualization on raw predictions will not
-    reproduce it. Report a resolved NCORR of `null` as null, never as zero: it means the
+  - **INOV**: UNQ's calculation with the equal-weight average of a frozen core feature set,
+    whose membership is not published, in place of the reference series. Report it where
+    rounds have resolved; you cannot reproduce it exactly offline without the core set.
+    Report a resolved INOV of `null` as null, never as zero: it means the
     core features were absent from the scored frame, which leaves that round without a
     round score.
   - **correlation-with-benchmark**: corr of your preds with the benchmark series. This is
-    the tell for the "high CORR, high correlation-with-benchmark" trap: a model that just
-    re-expresses the benchmark and will earn little AIMC.
+    the tell for the "high FIT, high correlation-with-benchmark" trap: a model that just
+    re-expresses the benchmark and will earn little UNQ.
   - **stability**: per-exped sharpe (mean/std of the per-exped score) and max drawdown
     of the cumulative score. Display-only on the board, but the right selection diagnostic
     offline.
@@ -92,12 +93,12 @@ predictions on disk. This skill's numbers should trace back to files in your own
 `experiments/` folder wherever possible.
 
 Pick the **best model by the offline round score**: the live `explain_scoring` weights
-applied to holdout CORR and the `contribution()` AIMC proxy (recent-window CORR breaks
-ties). Don't pick on CORR alone. It is the term you can compute most precisely offline,
+applied to holdout FIT and the `contribution()` UNQ proxy (recent-window FIT breaks
+ties). Don't pick on FIT alone. It is the term you can compute most precisely offline,
 but the board ranks on the blend. Use correlation-with-benchmark as the differentiation
-check and per-exped stability (plus resolved-round AIMC where available) to confirm the edge isn't a single
-lucky exped. A high-CORR model with high correlation-with-benchmark is *not* clearly the
-winner, flag it as a likely benchmark-echo and note that its AIMC, once a round
+check and per-exped stability (plus resolved-round UNQ where available) to confirm the edge isn't a single
+lucky exped. A high-FIT model with high correlation-with-benchmark is *not* clearly the
+winner, flag it as a likely benchmark-echo and note that its UNQ, once a round
 resolves, may disappoint.
 
 ## Step 3: Write experiment.md
@@ -110,15 +111,15 @@ Use this template. Keep prose tight; every section earns its place.
 **Date:** YYYY-MM-DD
 **Event dataset:** futures
 **Target:** <the schema's primary_target>
-**Selection metric:** offline round score (`explain_scoring` weights on CORR + AIMC proxy), with correlation-with-benchmark as the differentiation guard  ·  **Round score:** weighted CORR+AIMC+NCORR blend, bounded per round (see `explain_scoring` for live weights)
+**Selection metric:** offline round score (`explain_scoring` weights on FIT + UNQ proxy), with correlation-with-benchmark as the differentiation guard  ·  **Round score:** weighted FIT+UNQ+INOV blend, bounded per round (see `explain_scoring` for live weights)
 
 ## Abstract
 Two to four sentences: what was tested, the headline result, and the decision
-(stake / not yet). Lead with CORR and correlation-with-benchmark (AIMC alongside where resolved).
+(stake / not yet). Lead with FIT and correlation-with-benchmark (UNQ alongside where resolved).
 
 ## Motivation
 Why this idea should produce alpha *beyond the reference series*. I.e. why it should lower
-correlation-with-benchmark (and so raise AIMC), not just raise CORR. State the hypothesis
+correlation-with-benchmark (and so raise UNQ), not just raise FIT. State the hypothesis
 you set out to test.
 
 ## Method
@@ -137,15 +138,15 @@ One short subsection per config that *actually ran*. Name the artifacts
 
 ## Results
 
-| Model | Round | CORR (full) | CORR (recent) | corr_w/_benchmark | AIMC (resolved) | per-exped sharpe | max DD | payout (est) | Status |
+| Model | Round | FIT (full) | FIT (recent) | corr_w/_benchmark | UNQ (resolved) | per-exped sharpe | max DD | payout (est) | Status |
 |-------|-------|-------------|----------------|-------------------|------------------|------------------|--------|--------------|--------|
 | ...   | ...   | ...         | ...            | ...               | ...              | ...              | ...    | ...          | best / kept / dropped |
 
-`payout (est)` is the weighted CORR+AIMC+NCORR blend, before the payout factor and (on
+`payout (est)` is the weighted FIT+UNQ+INOV blend, before the payout factor and (on
 staked events) the per-round return bound. `explain_scoring` reads the weights and the
-bound live, so don't hardcode an ordering. Call out any high-CORR / high-corr_w/_benchmark
+bound live, so don't hardcode an ordering. Call out any high-FIT / high-corr_w/_benchmark
 rows explicitly. Accuracy that differentiates nothing scores well offline and still pays
-badly once AIMC resolves.
+badly once UNQ resolves.
 
 ### Round-by-round
 For each round: what changed, the best result, and whether it beat the prior best. Keep
@@ -154,23 +155,23 @@ your experiment rounds and the event's sealed scoring rounds clearly distinct.
 ### Robustness over time
 There is no cluster or sector axis on this panel, so the fragility check is temporal: split
 the holdout in half and report whether the edge survives in both. An edge confined to one
-stretch of expeds is a regime artifact, say so. Per-exped CORR spread and the worst run of
+stretch of expeds is a regime artifact, say so. Per-exped FIT spread and the worst run of
 negative expeds belong here too.
 
 ## Standard plot
-![cumulative CORR and correlation-with-benchmark](plots/cumulative_corr.png)
-Cumulative CORR of the best model, and its rolling correlation with the published
-benchmark, over expeds. Interpret it: is CORR accumulating steadily, and is
+![cumulative FIT and correlation-with-benchmark](plots/cumulative_fit.png)
+Cumulative FIT of the best model, and its rolling correlation with the published
+benchmark, over expeds. Interpret it: is FIT accumulating steadily, and is
 correlation-with-benchmark trending down (more differentiated) or up (converging on the
 benchmark)?
 
 ## Decisions
 The choices you made and why (feature set, model family, sweep picks, per-exped vs
 global). Frame them against correlation-with-benchmark (the differentiation guard), not
-just CORR.
+just FIT.
 
 ## Stopping rationale
-Why you stopped iterating, e.g. CORR plateau over N rounds, recent-window
+Why you stopped iterating, e.g. FIT plateau over N rounds, recent-window
 correlation-with-benchmark no longer improving, diminishing payout per round, or a
 confirmatory full-data run after a scout phase.
 
@@ -180,7 +181,7 @@ Honest about negative results.
 
 ## What we'd stake / why (or not yet)
 A clear call in payout terms: would you stake this model, and why, or what specifically
-must improve first (e.g. temporal breadth, benchmark de-correlation, resolved-round AIMC
+must improve first (e.g. temporal breadth, benchmark de-correlation, resolved-round UNQ
 once available).
 
 ## Next experiments
@@ -189,11 +190,11 @@ once available).
 
 ## Step 4: Generate the standard plot
 
-The standard Everesteer plot is **cumulative CORR of the best model, plus its rolling
+The standard Everesteer plot is **cumulative FIT of the best model, plus its rolling
 correlation with the published benchmark, over expeds**, built from the run's
 out-of-sample predictions.
 
-This repo ships no plotting helper, so build it yourself: compute the per-exped CORR
+This repo ships no plotting helper, so build it yourself: compute the per-exped FIT
 series and cumsum it, compute the rolling correlation-with-benchmark series, and plot both
 against the benchmark line. A minimal matplotlib version:
 
@@ -202,11 +203,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-# expeds: ordered list; corr_cum: cumulative per-exped CORR;
+# expeds: ordered list; fit_cum: cumulative per-exped FIT;
 # bench_corr_roll: rolling correlation-with-benchmark; bench_cum: cumulative benchmark score
 NAVY, TEAL, CORAL = "#09142F", "#007B63", "#EC9A5F"
 fig, ax = plt.subplots(figsize=(12, 5))
-ax.plot(expeds, corr_cum, color=TEAL, label="Cumulative CORR")
+ax.plot(expeds, fit_cum, color=TEAL, label="Cumulative FIT")
 ax.plot(expeds, bench_corr_roll, color=CORAL, label="Rolling correlation-with-benchmark")
 ax.plot(expeds, bench_cum, color=NAVY, linestyle="--", label="published benchmark")
 ax.axhline(0, color=NAVY, linewidth=0.5)
@@ -214,7 +215,7 @@ ax.set_xlabel("exped"); ax.set_ylabel("cumulative score / correlation")
 ax.set_title("Best model vs the published benchmark over expeds")
 ax.legend()
 fig.tight_layout()
-fig.savefig("experiments/<name>/plots/cumulative_corr.png", dpi=150)
+fig.savefig("experiments/<name>/plots/cumulative_fit.png", dpi=150)
 ```
 
 Embed it with a **relative** link so it resolves from inside the experiment folder. If
@@ -227,12 +228,12 @@ candidate and link each.
 - Every number in the results table traces back to a real `results/` artifact.
 - Runs that only have a config (no artifacts) are labeled planned, never tabulated as
   results.
-- CORR is reported both full-period and recent-window (AIMC alongside where rounds have
-  resolved); correlation-with-benchmark is shown so high-CORR/benchmark-echo cases are
+- FIT is reported both full-period and recent-window (UNQ alongside where rounds have
+  resolved); correlation-with-benchmark is shown so high-FIT/benchmark-echo cases are
   visible.
 - The over-time robustness split is present and interpreted (there is no cluster axis on
   this panel to break down instead).
-- The payout framing uses the weighted CORR+AIMC+NCORR blend, per `explain_scoring` (no
+- The payout framing uses the weighted FIT+UNQ+INOV blend, per `explain_scoring` (no
   hardcoded ordering or cap number).
 - The "what we'd stake / why (or not yet)" conclusion is explicit.
 - No synthetic data: all metrics come from real Everesteer predictions and scores.

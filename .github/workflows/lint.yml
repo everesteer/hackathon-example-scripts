@@ -98,9 +98,9 @@ jobs:
           echo 'OK - no tournament-lane calls or instructions.'
 
       # Deliberately NOT checked here: the no-metric-ordering rule ("never assert
-      # which of CORR / AIMC / NCORR leads"). It is not machine-checkable on this
+      # which of FIT / UNQ / INOV leads"). It is not machine-checkable on this
       # tree. The banned assertion and the legitimate warning differ only by a
-      # negation: "CORR dominates" vs "do not assume which term dominates", and
+      # negation: "FIT dominates" vs "do not assume which term dominates", and
       # the prose is hard-wrapped, so the negation and the claim routinely land on
       # different lines where a line-oriented grep cannot see them together. Even
       # the seemingly-unconditional phrasings ("dominant payout term") read fine
