@@ -56,7 +56,7 @@ into. Any recurring submission job runs on **your own** machine/cron/systemd.
   set that version's sandbox runs, so `pip install -r <url>` before you pickle. The
   declaration is also checked against the pickle's own embedded bytecode where readable,
   and a provable mismatch is refused at upload wherever enforcement is on.
-- Boards rank on each round's **round score**, a weighted blend of FIT20, UNQ and
+- Boards rank on each round's **round score**, a weighted blend of FIT, UNQ and
   INOV, clipped per round. Call `explain_scoring` for the live weights; don't assume
   which term dominates, since the weights are a live setting that has changed before.
 - Some events carry real money via **event staking**, an off-chain-draft /
@@ -237,7 +237,7 @@ client.get_validation_diagnostics(model_id=MODEL_ID)          # Sharpe, mean FIT
 # (via MCP: run_validation_diagnostics: same read, tool name differs from the client method)
 ```
 
-Metrics to read: **UNQ** and **INOV** are both scored terms alongside FIT20. UNQ is
+Metrics to read: **UNQ** and **INOV** are both scored terms alongside FIT. UNQ is
 the covariance left after a **reference series'** direction is removed, and which series is a per-product setting:
 `explain_scoring`'s `metrics.unq` is the authority, and on a hackathon event it reports
 the **event's own benchmark predictions** rather than the crowd consensus the live
