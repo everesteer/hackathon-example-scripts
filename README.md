@@ -13,9 +13,7 @@ the whole loop once, three notebooks, and the agent contract in [`AGENTS.md`](AG
    ```
 
    The SDK is published as `everesteer-api` (it was `everestapi` up to 0.3.41); you still
-   `import everestapi`. If the old `everestapi` package is installed, first run
-   `pip uninstall -y everestapi everesteer-api`: both packages write the same files, so
-   removing only the old one would break the new one.
+   `import everestapi`.
 
 2. Set your credentials. Onboarding's **Copy setup command** exports both for you, or do it by
    hand:

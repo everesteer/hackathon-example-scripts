@@ -19,9 +19,7 @@ there. The human-readable account of the day is in the [README](README.md#the-ev
 
 - Install the SDK: `pip install "everesteer-api>=0.4.1"`. (0.3.16 was the first release carrying
   the event-staking calls, so on a money event an older pin has no way to place a stake.)
-  The SDK was published as `everestapi` up to 0.3.41; the import is still `everestapi`. If the
-  old package is installed, first run `pip uninstall -y everestapi everesteer-api`: both
-  packages write the same files, so removing only the old one would break the new one.
+  The SDK was published as `everestapi` up to 0.3.41; the import is still `everestapi`.
 - Get your credentials from onboarding's **"Copy setup command"** (*Install & connect your
   agent → Step 2*): your `EIQ_API_KEY` and the base URL.
 - Set them in your shell:
