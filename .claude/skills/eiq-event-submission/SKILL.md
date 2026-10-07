@@ -56,8 +56,8 @@ into. Any recurring submission job runs on **your own** machine/cron/systemd.
   set that version's sandbox runs, so `pip install -r <url>` before you pickle. The
   declaration is also checked against the pickle's own embedded bytecode where readable,
   and a provable mismatch is refused at upload wherever enforcement is on.
-- Boards rank on each round's **round score**, a weighted blend of CORR20, AIMC and
-  NCORR, bounded per round by an arctan. Call `explain_scoring` for the live weights; don't assume
+- Boards rank on each round's **round score**, a weighted blend of FIT, UNQ and
+  INOV, bounded per round by an arctan. Call `explain_scoring` for the live weights; don't assume
   which term dominates, since the weights are a live setting that has changed before.
 - Some events carry real money via **event staking**, an off-chain-draft /
   on-chain-lock mechanism, separate from a live-tournament stake. `get_started`'s
@@ -233,20 +233,21 @@ transfers only the predictions file.
 ```python
 client.get_diagnostics_leaderboard()          # this round's board (pass scoring_window for a specific one)
 client.get_diagnostics_standings()            # cumulative standings across rounds. This decides the event
-client.get_validation_diagnostics(model_id=MODEL_ID)          # Sharpe, mean CORR, drawdown (display-only)
+client.get_validation_diagnostics(model_id=MODEL_ID)          # Sharpe, mean FIT, drawdown (display-only)
 # (via MCP: run_validation_diagnostics: same read, tool name differs from the client method)
 ```
 
-Metrics to read: **AIMC** and **NCORR** are both scored terms alongside CORR20. AIMC is
-your contribution over a **reference series**, and which series is a per-product setting:
-`explain_scoring`'s `metrics.aimc` is the authority, and on a hackathon event it reports
+Metrics to read: **UNQ** and **INOV** are both scored terms alongside FIT. UNQ is
+the covariance left after a **reference series'** direction is removed, and which series is a per-product setting:
+`explain_scoring`'s `metrics.unq` is the authority, and on a hackathon event it reports
 the **event's own benchmark predictions** rather than the crowd consensus the live
 tournament uses. So what earns nothing here is re-expressing *the benchmark* - which you
-can download over `train` and measure against yourself. NCORR is correlation after
-neutralizing against a frozen core feature set whose membership is not published.
+can download over `train` and measure against yourself. INOV is UNQ's
+calculation with the equal-weight average of a frozen core feature set (membership not
+published) in place of that series.
 `explain_scoring` reports the current weights, and a leaderboard response's `rank_metric`
-says what that specific board is actually ordered by. A model with high CORR but flat
-AIMC/NCORR leaves part of the score untouched.
+says what that specific board is actually ordered by. A model with high FIT but flat
+UNQ/INOV leaves part of the score untouched.
 
 ## Polling for the next round (your own infra)
 
@@ -334,7 +335,7 @@ already bounded, `b * arctan(blend / b)` with `b` the `score_multiple_constant` 
 `explain_scoring`'s `weights`, so one round moves a stake by at most `b * pi / 2` of it. The
 map is strictly increasing (it reorders nothing, a better score is always worth more) but it
 compresses large magnitudes, so size with
-`everestapi.scoring.payout(corr, aimc, inov=ncorr, stake=stake, score_multiple_constant=b)`
+`everestapi.scoring.payout(fit, unq, inov=inov, stake=stake, score_multiple_constant=b)`
 rather than on `stake x blend`. Each window's `payout_factor` and `stake_return_amplitude` in
 `get_event_staking` are historical: set only on rounds settled under the earlier formula, null
 since.
