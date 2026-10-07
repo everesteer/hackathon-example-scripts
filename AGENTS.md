@@ -251,13 +251,14 @@ allocation window *is* the round, so your drafts lock when the round **closes**;
 the window closed when the round **opened**. Either way `draft_window` going null is the signal,
 and once it does, that round's amounts are fixed.
 
-A staked round's return may additionally be **bounded**, so it is not proportional to the score.
-`get_event_staking` reports the bound per window; pass it to `everestapi.scoring.payout` as
-`stake_return_amplitude` before sizing an allocation, because a proportional estimate is
-optimistic and most wrong in the tail. The case that decides whether a large allocation paid
-off. Absent means no bound, and a stored zero means bounded-by-nothing rather than pays-nothing,
-so test for presence rather than truthiness. The bound is monotone: it compresses magnitudes,
-including mid-range ones, but never reorders anything.
+A staked round's return is its round score, `payout = stake * round score`, and the round score
+is **bounded**: `b * arctan(blend / b)`, with `b` the `score_multiple_constant` in
+`explain_scoring`'s `weights`, so one round moves at most `b * pi / 2` of the stake. Size an
+allocation with `everestapi.scoring.payout(..., score_multiple_constant=b)`, because a
+proportional estimate is optimistic and most wrong in the tail: the case that decides whether
+a large allocation paid off. The bound is monotone: it compresses magnitudes but never reorders
+anything. `get_event_staking`'s per-window `payout_factor` and `stake_return_amplitude` are
+historical: set only on rounds settled under the earlier formula, null since.
 
 Refusals name their reason (`stake_window_closed`, `window_mismatch`, `below_min_stake`,
 `slot_limit`, `insufficient_balance`, `allocation_locked`, `event_deadline_passed`);

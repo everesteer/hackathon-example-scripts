@@ -430,15 +430,12 @@ if (now.get("event_staking") or {}).get("money_event"):
 
         draft_window = pos.get("draft_window")
         if draft_window:
-            # The return is BOUNDED, so it is not proportional to the score: it is
-            # A * tanh(payout_factor * score / A). Size against that, not against
-            # stake x score. Absent means no bound; a stored 0.0 means
-            # bounded-by-nothing, not pays-nothing, so test presence not truth.
-            window = next((w for w in (pos.get("windows") or [])
-                           if w.get("window") == draft_window), {})
-            if "stake_return_amplitude" in window:
-                print(f"  return bound : A={window['stake_return_amplitude']} "
-                      "(pass to everestapi.scoring.payout as stake_return_amplitude)")
+            # The return is BOUNDED, so it is not proportional to the blend: a round
+            # pays stake x round score, and the round score is b * arctan(blend / b),
+            # with b the score_multiple_constant in explain_scoring's weights.
+            # Size against that, not against stake x blend.
+            print("  return bound : one round moves at most b * pi / 2 of the stake"
+                  " (b = explain_scoring weights.score_multiple_constant)")
             print(f"  DRAFTING IS OPEN for {draft_window}; drafts lock when it closes.")
         else:
             print("  No window is draftable right now.")
@@ -453,5 +450,5 @@ print("  client.get_diagnostics_standings():    cumulative standings across roun
 print("  client.get_event_staking():            the authority on whether this")
 print("     event carries money, and whether staking is enabled for you")
 print("\nBoards rank on the round score: a weighted blend of CORR, AIMC and NCORR,")
-print("clipped per round. Call explain_scoring for the live weights and do not")
+print("bounded per round. Call explain_scoring for the live weights and do not")
 print("assume which term dominates.")

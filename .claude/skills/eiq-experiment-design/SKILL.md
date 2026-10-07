@@ -89,10 +89,10 @@ tournament reads that research write-ups reach for do not work here, and two of 
     little AIMC.
 - **The round score is a weighted blend of CORR, AIMC and NCORR, bounded per round. Call
   `explain_scoring` for the live weights.** Don't hardcode which term dominates; it has
-  changed before. On a money event that score is then mapped to a payout through a
-  **bounded** function, `A * tanh(payout_factor * score / A)`; `get_event_staking` reports
-  the `payout_factor` and `stake_return_amplitude` each round actually froze. Pass them to
-  `everestapi.scoring.payout` rather than estimating proportionally.
+  changed before. On a money event a round pays `stake * round score`, and the round
+  score is `b * arctan(blend / b)` (`b` is `score_multiple_constant` in `explain_scoring`'s
+  `weights`), so one round moves at most `b * pi / 2` of the stake. Size with
+  `everestapi.scoring.payout(..., score_multiple_constant=b)` rather than proportionally.
 
 ## The loop in one breath
 
