@@ -57,7 +57,7 @@ into. Any recurring submission job runs on **your own** machine/cron/systemd.
   declaration is also checked against the pickle's own embedded bytecode where readable,
   and a provable mismatch is refused at upload wherever enforcement is on.
 - Boards rank on each round's **round score**, a weighted blend of FIT, UNQ and
-  INOV, clipped per round. Call `explain_scoring` for the live weights; don't assume
+  INOV, bounded per round by an arctan. Call `explain_scoring` for the live weights; don't assume
   which term dominates, since the weights are a live setting that has changed before.
 - Some events carry real money via **event staking**, an off-chain-draft /
   on-chain-lock mechanism, separate from a live-tournament stake. `get_started`'s
@@ -330,13 +330,15 @@ arrives with the previous round's board. `get_event_staking()`'s `windows[]` is 
 trail: `allocations` (`locked_at`, on-chain `lock_tx_hash`) and `settlements` (`payout_micro`,
 `claim_tx_hash`).
 
-**A round's return is bounded, so never size on `stake x score`.** It is
-`A * tanh(payout_factor * score / A)`, with `A` the per-window `stake_return_amplitude` that
-`get_event_staking` reports. Pass it to `everestapi.scoring.payout` as `stake_return_amplitude`.
-The map is strictly increasing (it reorders nothing, a better score is always worth more) but it
-compresses mid-range magnitudes as well as extremes, so a proportional estimate is optimistic
-exactly where a large allocation would be decided. Absent means no bound; a stored `0.0` means
-bounded-by-nothing rather than pays-nothing, so test for presence, not truthiness.
+**A round's return is its round score: `payout = stake * round score`.** The round score is
+already bounded, `b * arctan(blend / b)` with `b` the `score_multiple_constant` in
+`explain_scoring`'s `weights`, so one round moves a stake by at most `b * pi / 2` of it. The
+map is strictly increasing (it reorders nothing, a better score is always worth more) but it
+compresses large magnitudes, so size with
+`everestapi.scoring.payout(fit, unq, inov=inov, stake=stake, score_multiple_constant=b)`
+rather than on `stake x blend`. Each window's `payout_factor` and `stake_return_amplitude` in
+`get_event_staking` are historical: set only on rounds settled under the earlier formula, null
+since.
 
 Pre-staking checklist:
 - [ ] **Operator has explicitly approved** staking this model, this amount, this window.
