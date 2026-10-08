@@ -56,8 +56,10 @@ into. Any recurring submission job runs on **your own** machine/cron/systemd.
   set that version's sandbox runs, so `pip install -r <url>` before you pickle. The
   declaration is also checked against the pickle's own embedded bytecode where readable,
   and a provable mismatch is refused at upload wherever enforcement is on.
-- Boards rank on each round's **round score**, a weighted blend of FIT, UNQ and
-  INOV, bounded per round by an arctan. Call `explain_scoring` for the live weights; don't assume
+- Boards rank on each round's **round score**: `b * arctan(3 * S / b)` with
+  `S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)` (B_* are the event benchmark entrant's own terms for
+  that round). UNQ counts 3x, there is no zero rule, and copying the benchmark earns about 0.
+  Call `explain_scoring` for the platform's current scoring description; don't assume
   which term dominates, since the weights are a live setting that has changed before.
 - Some events carry real money via **event staking**, an off-chain-draft /
   on-chain-lock mechanism, separate from a live-tournament stake. `get_started`'s
@@ -331,12 +333,13 @@ trail: `allocations` (`locked_at`, on-chain `lock_tx_hash`) and `settlements` (`
 `claim_tx_hash`).
 
 **A round's return is its round score: `payout = stake * round score`.** The round score is
-already bounded, `b * arctan(blend / b)` with `b` the `score_multiple_constant` in
+already bounded, `b * arctan(3 * S / b)` (`S` as above) with `b` the `score_multiple_constant` in
 `explain_scoring`'s `weights`, so one round moves a stake by at most `b * pi / 2` of it. The
 map is strictly increasing (it reorders nothing, a better score is always worth more) but it
 compresses large magnitudes, so size with
-`everestapi.scoring.payout(fit, unq, inov=inov, stake=stake, score_multiple_constant=b)`
-rather than on `stake x blend`. Each window's `payout_factor` and `stake_return_amplitude` in
+`stake * b * arctan(3 * S / b)`, computing `S` yourself (the SDK `payout()` helper does not
+know the benchmark subtraction or the 3x terms, so do not use it for this score)
+rather than on `stake x S`. Each window's `payout_factor` and `stake_return_amplitude` in
 `get_event_staking` are historical: set only on rounds settled under the earlier formula, null
 since.
 
@@ -386,5 +389,5 @@ own USDC to a deposit address does not raise what you may allocate.
 | Practice board | `submit_validation_diagnostics(model_id, predictions, model_pkl, model_pkl_python_version)` |
 | Board / standings | `get_diagnostics_leaderboard()`, `get_diagnostics_standings()` |
 | Diagnostics | `get_validation_diagnostics` (MCP: `run_validation_diagnostics`) |
-| Live weights | `explain_scoring` |
+| Live scoring settings | `explain_scoring` |
 | Event staking | `get_event_staking`, `set_stake_allocation`, `withdraw_stake_allocation` |

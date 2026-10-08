@@ -430,10 +430,12 @@ if (now.get("event_staking") or {}).get("money_event"):
 
         draft_window = pos.get("draft_window")
         if draft_window:
-            # The return is BOUNDED, so it is not proportional to the blend: a round
-            # pays stake x round score, and the round score is b * arctan(blend / b),
-            # with b the score_multiple_constant in explain_scoring's weights.
-            # Size against that, not against stake x blend.
+            # The return is BOUNDED, so it is not proportional to S: a round
+            # pays stake x round score. On an event the round score is
+            # b * arctan(3 * S / b), S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV), where
+            # B_* are the event benchmark entrant's own terms for that round, and b is
+            # the score_multiple_constant in explain_scoring's weights. A model that
+            # only copies the benchmark scores about 0. Size against that, not stake x S.
             print("  return bound : one round moves at most b * pi / 2 of the stake"
                   " (b = explain_scoring weights.score_multiple_constant)")
             print(f"  DRAFTING IS OPEN for {draft_window}; drafts lock when it closes.")
@@ -449,6 +451,7 @@ print("     (pass scoring_window to read a specific round's board)")
 print("  client.get_diagnostics_standings():    cumulative standings across rounds")
 print("  client.get_event_staking():            the authority on whether this")
 print("     event carries money, and whether staking is enabled for you")
-print("\nBoards rank on the round score: a weighted blend of FIT, UNQ and INOV,")
-print("bounded per round. Call explain_scoring for the live weights and do not")
-print("assume which term dominates.")
+print("\nBoards rank on the round score, relative to the event benchmark:")
+print("  S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV);  score = b * arctan(3*S / b)")
+print("UNQ counts 3x, there is no zero rule, and copying the benchmark earns about 0.")
+print("Call explain_scoring for the platform's current scoring description.")
