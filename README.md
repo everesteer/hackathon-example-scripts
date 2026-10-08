@@ -270,8 +270,17 @@ reference — never submit it, its ids match nothing.
 
 ## How you're ranked
 
-Each round has its own board, ranked on that round's **round score**: a weighted blend of FIT,
-UNQ and INOV, bounded per round and measured out-of-sample on the graded column.
+Each round has its own board, ranked on that round's **round score**, measured out-of-sample on
+the graded column and relative to the event benchmark:
+
+    S     = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)
+    score = b * arctan(3 * S / b)
+
+`B_FIT` and `B_INOV` are the event benchmark entrant's own FIT and INOV for that same round. UNQ
+counts three times. There is no zero rule: a negative term counts as negative. The benchmark's own
+line scores exactly 0, so a model that copies the benchmark earns about 0, and only signal the
+benchmark lacks pays. A round with no benchmark entrant row may be shown without the subtraction and
+marked as having no benchmark.
 
 - **FIT** is a rank covariance: your predictions are ranked, mapped to a standard normal, and
   FIT is their covariance with the realised forward return.
@@ -284,8 +293,7 @@ UNQ and INOV, bounded per round and measured out-of-sample on the graded column.
 - **INOV** is the same again with the equal-weight average of a fixed core feature set in place
   of the reference series, so signal beyond what those features carry counts for more.
 
-Call `explain_scoring` for the live weights. They are platform settings and they have changed
-before, so no document, this one included, can tell you which term leads. Optimise the round
+Call `explain_scoring` for the platform's current scoring description. Optimise the round
 score rather than a single term: a model tuned on one leaves the rest untouched. `rank_metric`
 on any leaderboard response reports what that board was actually ordered by.
 
@@ -321,9 +329,9 @@ it closes, and a lock is immutable. Poll `draft_window` rather than guessing fro
 **You draft blind.** Round N's score stays sealed until N+1 opens, which is also when N's stakes
 settle — so you size the next round the moment you learn how the last one went.
 
-**The return is bounded**, not proportional to the blend: a round pays `stake * round score`,
-and the round score is `b * arctan(blend / b)` with `b` the `score_multiple_constant` in
-`explain_scoring`'s `weights`. Size with `everestapi.scoring.payout(..., score_multiple_constant=b)`,
+**The return is bounded**, not proportional to `S`: a round pays `stake * round score`,
+and the round score is `b * arctan(3 * S / b)` with `b` the `score_multiple_constant` in
+`explain_scoring`'s `weights`, so a model that only matches the benchmark returns about nothing. Size with `stake * b * arctan(3 * S / b)` (compute `S` yourself; the SDK `payout()` helper does not know this score),
 not a proportional guess.
 
 `amount_usdc` is a **string**; a JSON number is refused. Full surface in

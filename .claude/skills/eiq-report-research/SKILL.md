@@ -22,17 +22,15 @@ internal platform repo to call into.
 - Primary target: the column `get_dataset_schema` reports as `primary_target`. Benchmark:
   whatever `download_benchmark("futures", "train")` serves, named by the column you find
   in that frame rather than assumed.
-- Round score: a weighted blend of FIT, UNQ and INOV, bounded per round. Call
-  `explain_scoring` for the live weights; don't hardcode which term dominates, it has
-  changed before. Uniqueness pays more than raw accuracy, say so in the write-up. On a
-  money event a round pays `stake * round score`, and the round score is
-  `b * arctan(blend / b)` (`b` is `score_multiple_constant` in `explain_scoring`'s
+- Round score: On an event the round score is `b * arctan(3 * S / b)` with `S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)`, where `B_FIT` and `B_INOV` are the event benchmark entrant's own FIT and INOV for the same round. UNQ counts 3x, there is no zero rule, and copying the benchmark earns about 0. Call
+  `explain_scoring` for the platform's current scoring description. Uniqueness pays more than raw accuracy,
+  say so in the write-up. On a money event a round pays `stake * round score` (`b` is `score_multiple_constant` in `explain_scoring`'s
   `weights`), so one round moves at most `b * pi / 2` of the stake.
   Cumulative standings carry the **exped-weighted mean** of per-round scores, never a sum.
 - Always report these:
   - **FIT**: mean per-exped rank covariance of your predictions with the target (ranked,
     mapped to a standard normal, then the covariance with the mean-centred target, so it is
-    not bounded by 1); also a scored term (see `explain_scoring` for the live weights). This
+    not bounded by 1); also a scored term (see the round score formula above). This
     is the primary *experiment-selection* metric, since it's the one number you can compute
     precisely offline every round. Report it **two ways**: full-period FIT and a
     recent-window FIT (most recent ~20-40 expeds).
@@ -92,10 +90,10 @@ Build the per-exped stability series (sharpe, drawdown) yourself from the out-of
 predictions on disk. This skill's numbers should trace back to files in your own
 `experiments/` folder wherever possible.
 
-Pick the **best model by the offline round score**: the live `explain_scoring` weights
+Pick the **best model by the offline round score**: the round score formula (`S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)`)
 applied to holdout FIT and the `contribution()` UNQ proxy (recent-window FIT breaks
 ties). Don't pick on FIT alone. It is the term you can compute most precisely offline,
-but the board ranks on the blend. Use correlation-with-benchmark as the differentiation
+but the board ranks on the round score. Use correlation-with-benchmark as the differentiation
 check and per-exped stability (plus resolved-round UNQ where available) to confirm the edge isn't a single
 lucky exped. A high-FIT model with high correlation-with-benchmark is *not* clearly the
 winner, flag it as a likely benchmark-echo and note that its UNQ, once a round
@@ -111,7 +109,7 @@ Use this template. Keep prose tight; every section earns its place.
 **Date:** YYYY-MM-DD
 **Event dataset:** futures
 **Target:** <the schema's primary_target>
-**Selection metric:** offline round score (`explain_scoring` weights on FIT + UNQ proxy), with correlation-with-benchmark as the differentiation guard  ·  **Round score:** weighted FIT+UNQ+INOV blend, bounded per round (see `explain_scoring` for live weights)
+**Selection metric:** offline round score (round score formula on FIT + UNQ proxy), with correlation-with-benchmark as the differentiation guard  ·  **Round score:** `b * arctan(3 * S / b)`, bounded per round and relative to the event benchmark (S as defined above)
 
 ## Abstract
 Two to four sentences: what was tested, the headline result, and the decision
@@ -142,9 +140,9 @@ One short subsection per config that *actually ran*. Name the artifacts
 |-------|-------|-------------|----------------|-------------------|------------------|------------------|--------|--------------|--------|
 | ...   | ...   | ...         | ...            | ...               | ...              | ...              | ...    | ...          | best / kept / dropped |
 
-`payout (est)` is `b * arctan(blend / b)` on the weighted FIT+UNQ+INOV blend, per unit of
-stake. `explain_scoring` reads the weights and `b` (`weights.score_multiple_constant`) live, so
-don't hardcode an ordering. Call out any high-FIT / high-corr_w/_benchmark
+`payout (est)` is `b * arctan(3 * S / b)` per unit of stake, with
+`S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)`. `explain_scoring` reads `b`
+(`weights.score_multiple_constant`) live. Call out any high-FIT / high-corr_w/_benchmark
 rows explicitly. Accuracy that differentiates nothing scores well offline and still pays
 badly once UNQ resolves.
 
@@ -233,7 +231,7 @@ candidate and link each.
   visible.
 - The over-time robustness split is present and interpreted (there is no cluster axis on
   this panel to break down instead).
-- The payout framing uses the weighted FIT+UNQ+INOV blend, per `explain_scoring` (no
+- The payout framing uses the round score `b * arctan(3 * S / b)`, per `explain_scoring` (no
   hardcoded ordering or cap number).
 - The "what we'd stake / why (or not yet)" conclusion is explicit.
 - No synthetic data: all metrics come from real Everesteer predictions and scores.

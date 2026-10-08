@@ -78,7 +78,7 @@ Translate the idea into a concrete plan. Invoke **`eiq-experiment-design`**, whi
 responsible for:
 
 - pinning the hypothesis and the one metric that decides win/lose (default: the
-  **offline round score**, the live `explain_scoring` weights applied to holdout FIT and
+  **offline round score**, the round score formula (3x UNQ, minus the benchmark's FIT and INOV) applied to holdout FIT and
   the `contribution()` UNQ proxy, with correlation-with-benchmark as the differentiation
   guard and per-exped stability alongside),
 - choosing the feature scope and CV (exped-purged + embargoed. Never plain k-fold),
@@ -127,9 +127,9 @@ Execute round one exactly as the design specified.
   and answers a hackathon key with an empty list.) Compute FIT,
   correlation-with-benchmark and the offline UNQ proxy, and use
   `run_validation_diagnostics` for a sanity pass.
-- Rank candidates on the **round score**, not on any single term. Which terms carry
-  weight, and how much, is a live platform setting. Call `explain_scoring` and rank on
-  what it reports. A ranking built on one term leaves the rest of the score untouched.
+- Rank candidates on the **round score**, not on any single term. The formula is
+  fixed: UNQ counts 3x and the benchmark's FIT and INOV are subtracted. Call `explain_scoring` to
+  see the platform's current scoring description. A ranking built on one term leaves the rest of the score untouched.
   Use **correlation-with-benchmark**, the offline read on likely UNQ, as the
   differentiation guard beneath it, with per-exped stability as the robustness
   check. Promote the top ~2 configs.
@@ -191,10 +191,9 @@ non-overfit FIT). Then invoke
 ## Defaults and principles
 
 - **The offline round score is the experiment-selection metric.** Call `explain_scoring`
-  for the live weights and apply them to the terms you can measure on your holdout: FIT
-  and the `contribution()` UNQ proxy. No document, this one included, can tell you which
-  term leads. The weights are settings and they have changed. Do not rank configs on
-  FIT alone: the board ranks on the blend, and a model that wins one term can lose on
+  for the platform's current scoring description and apply the round score formula to the terms you can measure on your holdout: FIT
+  and the `contribution()` UNQ proxy (UNQ counts 3x). Do not rank configs on
+  FIT alone: the board ranks on the round score, and a model that wins one term can lose on
   the score. Per-exped stability is the robustness check; correlation-with-benchmark is
   the differentiation guard, not the objective.
 - **UNQ is the differentiation term, and here you can approximate it.** UNQ is your
@@ -207,13 +206,13 @@ non-overfit FIT). Then invoke
   **correlation-with-benchmark** alongside it as the cheap guard: lower means more
   differentiated. Never pay real FIT to buy differentiation, and label the proxy as a
   proxy - the server's number arrives after you submit.
-- **The round score is a weighted blend of FIT, UNQ and INOV, bounded per round. Call
-  `explain_scoring` for the live weights.** Don't hardcode an ordering; it has changed
-  before. Uniqueness pays more than raw accuracy, so keep the search pointed at
+- **The round score on an event is `b * arctan(3 * S / b)` with `S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)`, where `B_FIT` and `B_INOV` are the event benchmark entrant's own FIT and INOV for the same round. UNQ counts 3x, there is no zero rule, and copying the benchmark earns about 0. Call
+  `explain_scoring` for the platform's current scoring description.** Uniqueness pays more than raw accuracy
+  (UNQ counts 3x and the benchmark's own score is subtracted), so keep the search pointed at
   differentiated alpha rather than at chasing FIT. On a money event a round pays
-  `stake * round score`, and the round score is `b * arctan(blend / b)` (`b` is
+  `stake * round score` (`b` is
   `score_multiple_constant` in `explain_scoring`'s `weights`); size with
-  `everestapi.scoring.payout(..., score_multiple_constant=b)` rather than proportionally.
+  `stake * b * arctan(3 * S / b)` rather than proportionally (compute `S` yourself; the SDK `payout()` helper does not know this score).
 - **Scout before you scale.** Always a downsampled-exped round first; full data only for
   survivors.
 - **Iterate in rounds and stop at a plateau.** ~4-5 configs per round; two flat rounds

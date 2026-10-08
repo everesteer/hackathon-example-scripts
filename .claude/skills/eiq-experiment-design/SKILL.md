@@ -5,7 +5,7 @@ description: >-
   research loop. Clarify the idea, align a baseline against the event's published
   benchmark, write configs, train via the Everesteer MCP server (the unified train tool,
   templated or custom), select experiments on an offline estimate of the round score
-  (the live weights applied to FIT and the UNQ proxy), iterate in rounds, stop at a
+  (the round score formula applied to FIT and the UNQ proxy), iterate in rounds, stop at a
   plateau, and scale the winner. Use when asked to design an event experiment, decide what to try next, or
   turn a model idea into a structured, multi-round research plan.
 ---
@@ -88,12 +88,11 @@ tournament reads that research write-ups reach for do not work here, and two of 
   - Always sanity-check **correlation-with-benchmark**: a config with high FIT but
     correlation-with-benchmark near 1.0 is re-expressing the benchmark and will earn
     little UNQ.
-- **The round score is a weighted blend of FIT, UNQ and INOV, bounded per round. Call
-  `explain_scoring` for the live weights.** Don't hardcode which term dominates; it has
-  changed before. On a money event a round pays `stake * round score`, and the round
-  score is `b * arctan(blend / b)` (`b` is `score_multiple_constant` in `explain_scoring`'s
+- **The round score on an event is `b * arctan(3 * S / b)` with `S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)`, where `B_FIT` and `B_INOV` are the event benchmark entrant's own FIT and INOV for the same round. UNQ counts 3x, there is no zero rule, and copying the benchmark earns about 0. Call
+  `explain_scoring` for the platform's current scoring description.** On a money event a round pays
+  `stake * round score` (`b` is `score_multiple_constant` in `explain_scoring`'s
   `weights`), so one round moves at most `b * pi / 2` of the stake. Size with
-  `everestapi.scoring.payout(..., score_multiple_constant=b)` rather than proportionally.
+  `stake * b * arctan(3 * S / b)` rather than proportionally (compute `S` yourself; the SDK `payout()` helper does not know this score).
 
 ## The loop in one breath
 
@@ -129,10 +128,9 @@ Document the chosen interpretation and the rejected ones. That reasoning is part
   own embargoed holdout**, carved from the labeled `train` split, so every round has a
   baseline row. A hackathon key cannot score `validation` locally: its target columns are
   blanked and the practice board scores it server-side.
-- **Selection metric** = the **offline round score**: read the live weights from
-  `explain_scoring` and apply them to the terms you can measure on your holdout, FIT and
+- **Selection metric** = the **offline round score**: apply the round score formula (UNQ counts 3x, the benchmark's FIT and INOV are subtracted; `explain_scoring` confirms the live settings) to the terms you can measure on your holdout, FIT and
   the `contribution()` UNQ proxy. Do not select on FIT alone. The board ranks on the
-  blend, and a model that wins on one term can lose on the score. INOV cannot be
+  round score, and a model that wins on one term can lose on the score. INOV cannot be
   reproduced offline (see above), so guard it indirectly with the feature-concentration
   check below. **Diagnostics** = correlation-with-benchmark and per-exped stability.
 - **Budget.** Max rounds (≈4-5 expected), compute credits, wall-clock. Check
@@ -293,9 +291,9 @@ A single average metric hides the things that sink a model here.
   neither the level nor the ordering of your candidates transfers reliably to the next
   round. Keep several genuinely different models alive rather than betting on last
   round's winner.
-- **Select on the round score, not on one term of it.** Boards rank on the weighted blend,
+- **Select on the round score, not on one term of it.** Boards rank on the round score,
   so a config that gives up some FIT for a larger UNQ can be the better model. Whether it
-  is depends on the live weights, so compute it from `explain_scoring` each time rather than
+  is depends on the formula (UNQ counts 3x), so compute the round score each time rather than
   assuming which term leads. Correlation-with-benchmark is a diagnostic here, never the
   objective: it tells you why the UNQ proxy moved, not whether the model got better.
 
@@ -356,14 +354,14 @@ download_dataset(universe="futures", split="train")
 download_benchmark(universe="futures", split="train")   # the baseline; validation/live are
                                                         # withheld while an event is running
                                                         # (404 by design, not an outage)
-explain_scoring                          # the live weights for the offline round score
+explain_scoring                          # current scoring description for the offline round score
 for cfg in round_1_configs:              # ~4 configs, each varies ONE thing
     train(model=cfg.model, features="all", gpu="CPU",
           train_filter={"exped": {"cutoff_lt": FIRST_EMBARGO_EXPED},
                         "sample": {"fraction": 0.25, "unit": "exped"}})  -> job_id
 poll get_job_status(job_id) until all done
 # score each config on YOUR embargoed holdout: FIT, contribution(), the offline round
-# score from the live weights, corr-with-benchmark as a diagnostic
+# score from the round score formula, corr-with-benchmark as a diagnostic
 # write results/r1.csv + experiment.md table; pick the best score; decide round 2
 ```
 

@@ -99,7 +99,7 @@ Every number you act on and every file you upload should come from your own code
   otherwise, so a holdout carved from its artifacts afterwards is in-sample. Pass
   `train_filter={"exped": {"cutoff_lt": <first exped of your embargo>}}`.
 - **Score it yourself.** Predict that holdout locally and compute FIT, the UNQ proxy and the
-  round score from the live `explain_scoring` weights. Don't select on the job's own CV
+  round score from the formula in "What you're optimizing". Don't select on the job's own CV
   metrics: they are measured inside its folds, may not include every term the board scores,
   and its UNQ is an estimate against a proxy.
 - **Wrap it yourself.** Never upload the `.pkl` a job returns as-is. Wrap it in your own
@@ -252,9 +252,11 @@ the window closed when the round **opened**. Either way `draft_window` going nul
 and once it does, that round's amounts are fixed.
 
 A staked round's return is its round score, `payout = stake * round score`, and the round score
-is **bounded**: `b * arctan(blend / b)`, with `b` the `score_multiple_constant` in
-`explain_scoring`'s `weights`, so one round moves at most `b * pi / 2` of the stake. Size an
-allocation with `everestapi.scoring.payout(..., score_multiple_constant=b)`, because a
+is **bounded**: `b * arctan(3 * S / b)`, where `S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)`
+(`B_FIT` and `B_INOV` are the event benchmark entrant's own terms for that round) and `b` is the
+`score_multiple_constant` in `explain_scoring`'s `weights`, so one round moves at most
+`b * pi / 2` of the stake. A model that only copies the benchmark scores about 0. Size an
+allocation with `stake * b * arctan(3 * S / b)` (compute `S` yourself; the SDK `payout()` helper does not know this score), because a
 proportional estimate is optimistic and most wrong in the tail: the case that decides whether
 a large allocation paid off. The bound is monotone: it compresses magnitudes but never reorders
 anything. `get_event_staking`'s per-window `payout_factor` and `stake_return_amplitude` are
@@ -321,7 +323,7 @@ That changes the shape of a good run:
 - Scout cheap on `gpu="CPU"` across several ideas before scaling up only the one that
   survives. Pass `features` explicitly: its default, `"small"`, becomes an alphabetical prefix
   of the feature list on a dataset that publishes a single set.
-- **Optimise the round score, not one term of it.** `explain_scoring` gives the live weights; a
+- **Optimise the round score, not one term of it.** the score formula above is fixed; a
   model tuned on a single term leaves the rest untouched. Sharpe, std-dev, feature-exposure,
   max-drawdown and autocorrelation *are* display-only diagnostics. Those do not affect rank.
 - Your upload pool is **per event**, per agent, and certainly not per round: every model and
@@ -333,14 +335,16 @@ That changes the shape of a good run:
 
 ## What you're optimizing
 
-Each round's board ranks on that round's **round score**: a weighted blend of FIT, UNQ
-and INOV, bounded per round and measured out-of-sample on the column the dataset
+Each round's board ranks on that round's **round score**: `b * arctan(3 * S / b)` with
+`S = FIT + 3*UNQ + INOV - (B_FIT + B_INOV)`, so UNQ counts 3x, the event benchmark's own FIT and
+INOV for that round are subtracted, and there is no zero rule (a negative term counts as
+negative). A round with no benchmark entrant row may be shown without the subtraction and marked as having no benchmark.
+The score is bounded per round and measured out-of-sample on the column the dataset
 declares as graded. **Read that name from `get_dataset_schema` (`primary_target`)** and
 predict it; it differs between datasets, and it is not necessarily the first entry
 in the schema's `targets` list. In-sample fit earns nothing.
 
-Call `explain_scoring` for the live weights. They are platform settings, they have changed
-before, and no document, this one included, can tell you which term leads. Optimise the
+Call `explain_scoring` for the platform's current scoring description. Optimise the
 round score rather than any single term: a model tuned on one leaves the rest untouched.
 
 Per-round scores accumulate into the cumulative standings (`get_diagnostics_standings`),
