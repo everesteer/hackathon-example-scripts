@@ -33,8 +33,9 @@ tournament reads that research write-ups reach for do not work here, and two of 
 | `get_universe` | returns `instruments: []`, `count: 0` with a note. There is no live tournament round to describe |
 | `get_benchmarks` | returns `models: []` with a note. Use `download_benchmark` |
 
-- **Rows** are anonymous instruments at an **exped** (plural *expeds*; one exped ≈ one
-  trading day). There is **no instrument identity, no
+- **Rows** are anonymous baskets at an **exped** (plural *expeds*; one exped ≈ one
+  trading day): each is a combination of several real futures, drawn afresh for every exped, so no row follows one market
+  through time. There is **no instrument identity, no
   chain, and no cluster column** - `meta_cols` is `exped` and `data_type`, and `data_type`
   is a constant split marker, not a dimension you can group by. Any advice framed around
   clusters, contract rolls or liquidity tiers is tournament advice and does not apply.

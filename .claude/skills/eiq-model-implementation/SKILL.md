@@ -6,9 +6,9 @@ description: |
 
 # Implementing a Model for an Everesteer Hackathon Event
 
-An Everesteer hackathon event asks you to rank the instruments present at each **exped** against the event dataset's graded target, the column `get_dataset_schema` reports as `primary_target`, read at runtime rather than hardcoded. This skill is about the *code* that produces those rankings: how to express a model so it runs cleanly on Everesteer compute, and how to convince yourself the model is real before you put value behind it.
+An Everesteer hackathon event asks you to rank the rows present at each **exped** against the event dataset's graded target, the column `get_dataset_schema` reports as `primary_target`, read at runtime rather than hardcoded. This skill is about the *code* that produces those rankings: how to express a model so it runs cleanly on Everesteer compute, and how to convince yourself the model is real before you put value behind it.
 
-**The event panel is obfuscated, and that shapes the code you write.** Rows carry no instrument identity, no chain and no cluster: `meta_cols` is `exped` and `data_type`, and `data_type` is a constant split marker. Feature names are opaque labels with no decodable structure. So there is nothing to group by except time, and any pattern that needs instrument or sector metadata - cluster sample-weighting, roll-window checks, liquidity tiers - belongs to the live tournament, not here. `get_features` answers a hackathon key with `403 scope_mismatch` and `get_universe` returns an empty instrument list; `get_dataset_schema` (and `verbose=True` for feature-set membership) is your column source.
+**The event panel is obfuscated, and that shapes the code you write.** Each row is a basket, a combination of several real futures, drawn afresh for every exped, so rows do not follow one market through time. Rows also carry no instrument identity, no chain and no cluster: `meta_cols` is `exped` and `data_type`, and `data_type` is a constant split marker. Feature names are opaque labels with no decodable structure. So there is nothing to group by except time, and any pattern that needs instrument or sector metadata - cluster sample-weighting, roll-window checks, liquidity tiers - belongs to the live tournament, not here. `get_features` answers a hackathon key with `403 scope_mismatch` and `get_universe` returns an empty instrument list; `get_dataset_schema` (and `verbose=True` for feature-set membership) is your column source.
 
 You never touch any platform-internal repository. Everything here is built on the public `everestapi` SDK, the Everesteer MCP tools, and the helper code in `example-scripts/` plus a `models/` directory you own.
 
@@ -46,7 +46,7 @@ class MyEverestModel:
             real ones from the schema or the parquet, they follow no pattern you
             can match on. Each value is an integer bin; the bin count, value range
             and missing sentinel come from the schema's feature_encoding.
-            Rows are (exped, anonymous instrument) observations.
+            Rows are (exped, anonymous basket) observations.
         y : the graded target (schema primary_target), aligned to X.index.
         sample_weight : optional per-row weights.
         """

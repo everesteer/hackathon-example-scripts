@@ -161,7 +161,7 @@ Hackathon uploads on either lane **require** your model pickle (`model_pkl`) alo
 predictions, and **exactly one artifact shape is accepted**: a cloudpickled callable
 `predict(live_features)`, or `predict(live_features, live_benchmark_models)` to also
 receive the published live benchmark series, returning a single-column pandas DataFrame
-indexed by instrument id. Use `cloudpickle.dump`, never `pickle.dump`. A bare estimator,
+indexed by row id. Use `cloudpickle.dump`, never `pickle.dump`. A bare estimator,
 or a dict wrapping one, comes back as
 `400 "Everesteer runs one model shape: a cloudpickled callable."` The server rejects the
 upload without a pickle at all. Select features **by name** inside `predict` so the

@@ -252,7 +252,7 @@ print(f"  {len(submission):,} predictions written to hosted_predictions.parquet"
 # 7. Wrap the model in the one shape the upload gate accepts
 # =====================================================================
 # Everesteer runs one model shape: a cloudpickled predict() callable returning a
-# single-column DataFrame indexed by instrument id. Anything else is refused with
+# single-column DataFrame indexed by row id. Anything else is refused with
 #   400 "Everesteer runs one model shape: a cloudpickled callable."
 # The wrapper reuses step 4's scorer, so it selects features by name and applies
 # the same preprocessing the model was fit with, whatever the job returned.
