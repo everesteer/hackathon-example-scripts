@@ -269,6 +269,16 @@ You predict the schema's `primary_target`; the rest are auxiliary, not scored bu
 ensembling. [`example_predictions.csv`](example_predictions.csv) is the `id,prediction` format
 reference — never submit it, its ids match nothing.
 
+## Fair play: one exped at a time
+
+A row's prediction may use your model, the training data, and the other rows of **the same
+exped**. It may not use any other exped of a scored file (the practice board or a round).
+
+In particular, do not link rows across the expeds of a scored file, by nearest-neighbour
+feature matching or any other way, to read features from later expeds. Those features carry the
+move the target measures, so this reads the answer out of the file instead of predicting it. It
+is not allowed, even where the data happens to permit it.
+
 ## How you're ranked
 
 Each round has its own board, ranked on that round's **round score**, measured out-of-sample on
