@@ -201,7 +201,7 @@ model.fit(features_matrix(fit, feat_cols), fit[target_col])
 # =====================================================================
 # The downloaded parquet has NO 'id' column. The id every submit lane wants is
 # the index (its name is 'id'), and its values are opaque strings like
-# 'eiq_559073fecf705ae5'. Submit them VERBATIM. Renumbering them 0..N-1 produces
+# 'a3f09c1e7b2d4c58'. Submit them VERBATIM. Renumbering them 0..N-1 produces
 # a submission that matches ZERO rows.
 predictions = pd.DataFrame(
     {"prediction": model.predict(features_matrix(scored, feat_cols))},
@@ -222,7 +222,7 @@ predictions.to_parquet(pred_path, index=False)
 # `predict(live_features)` function -- or `predict(live_features,
 # live_benchmark_models)` to also receive the published live benchmark
 # series -- returning a SINGLE-COLUMN pandas DataFrame indexed by
-# instrument id. A bare estimator, or a dict wrapping one, is refused:
+# row id. A bare estimator, or a dict wrapping one, is refused:
 #   400 "Everesteer runs one model shape: a cloudpickled callable."
 # So use cloudpickle.dump, never pickle.dump.
 #

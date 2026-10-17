@@ -226,7 +226,7 @@ staked model every submission it had, and it settled at exactly $0.
 Both calls also want your model:
 
 - **`model_pkl=`** must be a **cloudpickled callable** `predict(live_features)` returning a
-  single-column DataFrame indexed by instrument id. `cloudpickle.dump`, never `pickle.dump` —
+  single-column DataFrame indexed by row id. `cloudpickle.dump`, never `pickle.dump` —
   a bare estimator is refused with
   `400 "Everesteer runs one model shape: a cloudpickled callable."`
 - **`model_pkl_python_version=`** is the interpreter that *saved* the pickle, not the one
@@ -246,7 +246,8 @@ Failed and cancelled uploads give their slot back; done, pending and running one
 
 ## The data
 
-Every row is **one instrument on one `exped`** (a single trading day), and scoring is per exped.
+Every row is **one basket on one `exped`** (a single trading day), and scoring is per exped. A
+basket is a combination of several real futures, drawn afresh for every exped, so a row is not one market you can follow from day to day.
 The **Data** page on the platform describes the panel, and
 [`01_explore_the_data.ipynb`](notebooks/01_explore_the_data.ipynb) walks it with charts: feature
 bins, missing values and the target family. Call `get_dataset_schema()` for the live target
