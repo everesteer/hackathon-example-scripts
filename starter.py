@@ -6,8 +6,8 @@ The hackathon is a different product from the Himalayas (futures) tournament, an
 your key is scoped to it. The shape of an event:
 
   1. fit on `train`:      LABELED (features + target_* columns), the largest split
-  2. predict `validation`, target columns BLANKED: the PRACTICE board that runs
-                            before round 1. Answers stay server-side, always
+  2. predict `validation`, target columns BLANKED: the PRACTICE board, open the
+                            whole event. Answers stay server-side, always
   3. then N sealed rounds. Each open round is served on `live`. FOUR is one
                             event's configuration, not a rule: read the clock
 
