@@ -131,7 +131,7 @@ An event is a **build-and-validate phase, then a sequence of sealed rounds**.  T
 
 | Phase | How long | The split you use | What you do |
 |---|---|---|---|
-| **Build & validate** | 3 hours | `train` (labeled), `validation` (blank target) | Fit models on `train`. Rehearse the upload path on the practice board. Nothing counts yet. |
+| **Build & validate** | 90 min | `train` (labeled), `validation` (blank target) | Fit models on `train`. Rehearse the upload path on the practice board. Nothing counts yet. |
 | **Round 1** | 30 min | `live`, blank target | Predict the open round, submit, read that round's board. |
 | **Round 2** | 20 min | `live` | The same again, on a fresh set of rows. |
 | **Round 3** | 20 min | `live` | |
@@ -147,7 +147,7 @@ round can be paused or extended: see [The toolkit](#the-toolkit).
 
 ### Build and validate
 
-Three hours, no round open. Spend it fitting models, and build more than one: rounds cover
+Ninety minutes, no round open. Spend it fitting models, and build more than one: rounds cover
 different periods, so round 1's winner is not reliably round 3's.
 
 Train on Everesteer's servers with the `train` call. You have $5 of credit, and a CPU LightGBM
