@@ -59,9 +59,10 @@ The splits:
 - `split="train"`: the **labeled** set (features + `target_*`), the largest, and what you fit on.
 - `split="live"`: the **blank-target scored** split, serving whichever round is currently open.
   This is the one you are ranked on.
-- `split="validation"`: the **blank-target** practice board that runs *before* round 1. Its
-  target columns are blanked and it is scored server-side, so it rehearses the upload path but
-  cannot be scored locally; **not** what the event is scored on.
+- `split="validation"`: the **blank-target** practice board, open from the event's start to its
+  end in every phase (only a brief `cadence.diagnostics_maintenance` window closes it). Use it
+  before round 1 to rehearse the upload path. Its target columns are blanked and it is scored
+  server-side, so it cannot be scored locally; **not** what the event is scored on.
 
 Predict on the `id`s of the split the open round serves and submit. The id is the parquet
 **index**, not a column, and its values are opaque strings. Submit them verbatim. Answers are
