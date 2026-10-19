@@ -193,7 +193,7 @@ unless you tell it not to, so pass a `train_filter` that ends the fit before you
 and holdout begin:
 
 ```python
-train_filter={"exped": {"cutoff_lt": FIRST_EMBARGO_EXPED}}   # e.g. "exped_6405"
+train_filter={"exped": {"cutoff_lt": FIRST_EMBARGO_EXPED}}   # an "exped_NNNN" token read from train
 ```
 
 `FIRST_EMBARGO_EXPED` is the first exped of the embargo in front of your holdout, read from

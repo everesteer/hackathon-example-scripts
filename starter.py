@@ -173,7 +173,7 @@ print(f"Scored: {len(scored):>8,} rows   split={scored_split}  ({scored_path})")
 # Feature values are ENCODED into bins. The bin count differs between datasets,
 # so read `schema["feature_encoding"]` rather than assuming one: it declares
 # the bin count, the value range and the `missing` sentinel (commonly -1.0, set
-# where the source was not onboarded for that instrument/date). Treat missing as
+# where the source had no data for that row's exped). Treat missing as
 # NaN or as its own category, NEVER as an ordinal below the lowest real bin.
 # A NaN target means the row was uncomputable; it is never imputed, so drop
 # those rows rather than filling them.
