@@ -157,6 +157,14 @@ uploading, rather than relying on the job's own scores or uploading the file it 
 [`starter.py`](starter.py) walks through the local path, [`starter_hosted.py`](starter_hosted.py)
 the server one.
 
+You also have **$200 of LLM credit** on the platform, separate from the $5 above. The hosted
+agent environment runs on it. To use it from your own client, mint an LLM key with
+`POST /api/v1/llm/keys` (your event key in `X-API-Key`) and point the Anthropic SDK at
+`base_url="https://hackathon.everesteer.ai/api/v1/llm/anthropic"` with that key. An
+OpenAI-compatible client works at `.../api/v1/llm/openai/v1`, but must send the key as an
+`X-API-Key` header, not `Authorization: Bearer`. The `.../v1/models` route under each lists
+the models on offer, and `GET /api/v1/llm/me` shows what is left.
+
 The **practice board** is open from the event's start to its end, in every phase, build
 included; the only exception is a brief maintenance window, which `cadence.diagnostics_maintenance`
 reports (retry later). `submit_validation_diagnostics` scores you on
